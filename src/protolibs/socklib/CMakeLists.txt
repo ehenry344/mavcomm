@@ -1,7 +1,7 @@
 add_library(SOCKLIB)
 
 set(SOCKLIB_SRC
-    udpsock.cpp
+    udpsocket.cpp
 )
 
 if(WIN32)
