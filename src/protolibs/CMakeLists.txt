@@ -1,0 +1,2 @@
+add_subdirectory(seriallib)
+add_subdirectory(socklib)

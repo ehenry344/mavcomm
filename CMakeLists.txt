@@ -5,10 +5,13 @@ project(MAVCOMM
     DESCRIPTION "MAVLink communications library"
 )
 
+# build options
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+# lib subdirectories
+add_subdirectory(src/protolibs)
 
 set(MAVCOMM_LIBS
     SOCKLIB # socket library
