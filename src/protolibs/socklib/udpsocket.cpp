@@ -40,7 +40,9 @@ uint8_t UDPSocket::bind(const sockinfo_t& sockinfo) {
 
     ret = ::inet_pton(AF_INET, _sock_info.ip, &_sock_addr.sin_addr);
     if (ret != 1) {
-        close(); // socket can get leaked here
+        // if we dont close it socket can get leaked
+        _close();
+
         if (ret == 0) {
             return Error::INVALID_ADDR;
         }
@@ -56,20 +58,25 @@ uint8_t UDPSocket::bind(const sockinfo_t& sockinfo) {
     return Error::NONE;
 }
 
+uint8_t UDPSocket::_close() {
+    int ret;
+#ifdef _WIN32
+    ret = ::closesocket(_sock_fd);
+#else
+    ret = ::close(_sock_fd);
+#endif // _WIN32
+    if (ret < 0) {
+        return Error::CLOSE;
+    }
+
+    _bound = false;
+
+    return Error::NONE;
+}
+
 uint8_t UDPSocket::close() {
     if (_bound) {
-        int ret;
-#ifdef _WIN32
-        ret = ::closesocket(_sock_fd);
-#else
-        ret = ::close(_sock_fd);
-#endif
-
-        if (ret < 0) {
-            return Error::CLOSE;
-        }
-
-        _bound = false;
+        return _close();
     }
 
     return Error::NONE;
@@ -140,7 +147,7 @@ uint8_t UDPSocket::sendto(const sockinfo_t& dst, const uint8_t* buf, std::size_t
         sizeof(dst_sa)
     );
 
-    if (ret < 0 || ret != buf_len) {
+    if (ret < 0 || static_cast<std::size_t>(ret) != buf_len) {
         return Error::SEND;
     }
 

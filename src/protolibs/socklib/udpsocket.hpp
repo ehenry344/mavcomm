@@ -73,6 +73,9 @@ class UDPSocket {
         bool _bound = false;
 
         // internal functions
+
+        // close function that bypasses the bound check
+        uint8_t _close();
 };
 
 
