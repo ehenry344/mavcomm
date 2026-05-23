@@ -12,21 +12,37 @@
 #include <errno.h>
 
 #ifdef _WIN32
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#pragma comment(lib, "Ws2_32.lib")
+
 #else
-#include <arpa/inet.h>
-#include <sys/socket.h>
+#include <termios.h>
 #include <unistd.h>
+#include <fcntl.h>
 #endif // _WIN32
 
 class SerialPort {
     public:
+        enum Error {
+            NONE,
+            OPEN
+        };
+
+
+
+        // basic functions
+        SerialPort();
+        ~SerialPort();
+
+        SerialPort::Error open(const char* name, uint32_t baudrate);
+
+        SerialPort::Error close();
+
+
 
 
     private:
-    
+        
+        int _fd = -1;
+
 };
 
 

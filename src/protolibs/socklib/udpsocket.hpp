@@ -5,9 +5,8 @@
 
 // stdlib
 #include <cstdint>
-#include <string>
 #include <stdexcept>
-
+#include <cassert>
 #include <string.h>
 #include <errno.h>
 
@@ -46,17 +45,25 @@ class UDPSocket {
         UDPSocket();
         ~UDPSocket();
 
-        uint8_t bind(const sockinfo_t& sockinfo);
+        // assigns socket to requested interface
+        UDPSocket::Error bind(const sockinfo_t& sockinfo);
 
-        uint8_t close();
+        // unbinds the socket
+        UDPSocket::Error close();    
 
-        uint8_t sendto(const sockinfo_t& dst, const uint8_t* buf, std::size_t buf_len);
-        uint8_t recvfrom(uint8_t* buf, 
+        // sends packet to the destination (dst)
+        UDPSocket::Error sendto(const sockinfo_t& dst, 
+                                const uint8_t* buf, 
+                                std::size_t buf_len);
+
+        // receives packet from the source (src)
+        UDPSocket::Error recvfrom(uint8_t* buf, 
                          std::size_t buf_len, 
                          std::size_t& recv_len, 
                          sockinfo_t& src);
         
-        uint8_t set_recv_timeout(std::size_t timeout_ms);
+        // specify receive timeout for recvfrom calls (in milliseconds)
+        UDPSocket::Error set_recv_timeout(std::size_t timeout_ms);
 
     private:
 
@@ -75,7 +82,7 @@ class UDPSocket {
         // internal functions
 
         // close function that bypasses the bound check
-        uint8_t _close();
+        UDPSocket::Error _close();
 };
 
 

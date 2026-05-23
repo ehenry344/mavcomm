@@ -14,10 +14,10 @@ UDPSocket::UDPSocket() {
     if (ret != 0) {
         throw std::runtime_error("UDPSocket::UDPSocket failed on WSAStartup");
     }
-#endif
+#endif // _WIN32
 }
 
-uint8_t UDPSocket::bind(const sockinfo_t& sockinfo) {
+UDPSocket::Error UDPSocket::bind(const sockinfo_t& sockinfo) {
     if (_bound) {
         return Error::BOUND;
     }
@@ -58,7 +58,7 @@ uint8_t UDPSocket::bind(const sockinfo_t& sockinfo) {
     return Error::NONE;
 }
 
-uint8_t UDPSocket::_close() {
+UDPSocket::Error UDPSocket::_close() {
     int ret;
 #ifdef _WIN32
     ret = ::closesocket(_sock_fd);
@@ -74,7 +74,7 @@ uint8_t UDPSocket::_close() {
     return Error::NONE;
 }
 
-uint8_t UDPSocket::close() {
+UDPSocket::Error UDPSocket::close() {
     if (_bound) {
         return _close();
     }
@@ -83,7 +83,7 @@ uint8_t UDPSocket::close() {
 }
 
 // receive timeout for recvfrom calls
-uint8_t UDPSocket::set_recv_timeout(std::size_t timeout_ms) {
+UDPSocket::Error UDPSocket::set_recv_timeout(std::size_t timeout_ms) {
     if (!_bound) {
         return Error::NOTBOUND;
     }
@@ -111,7 +111,7 @@ uint8_t UDPSocket::set_recv_timeout(std::size_t timeout_ms) {
         &recv_to,
         sizeof(recv_to)
     );
-#endif
+#endif // _WIN32
 
     if (ret != 0) {
         return Error::SETSOCKOPT;
@@ -120,7 +120,9 @@ uint8_t UDPSocket::set_recv_timeout(std::size_t timeout_ms) {
     return Error::NONE;
 }
 
-uint8_t UDPSocket::sendto(const sockinfo_t& dst, const uint8_t* buf, std::size_t buf_len) {
+UDPSocket::Error UDPSocket::sendto(const sockinfo_t& dst, const uint8_t* buf, std::size_t buf_len) {
+    assert(buf != nullptr);
+
     if (!_bound) {
         return Error::NOTBOUND;
     }
@@ -154,10 +156,10 @@ uint8_t UDPSocket::sendto(const sockinfo_t& dst, const uint8_t* buf, std::size_t
     return Error::NONE;
 }
 
-uint8_t UDPSocket::recvfrom(uint8_t* buf,
-                            std::size_t buf_len,
-                            std::size_t& recv_len, 
-                            sockinfo_t& src) {
+UDPSocket::Error UDPSocket::recvfrom(uint8_t* buf,
+                                     std::size_t buf_len,
+                                     std::size_t& recv_len, 
+                                     sockinfo_t& src) {
     if (!_bound) {
         return Error::NOTBOUND;
     }
