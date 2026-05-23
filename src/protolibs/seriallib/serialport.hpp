@@ -26,6 +26,14 @@ class SerialPort {
             OPEN
         };
 
+        enum Baud {
+            BAUD_9600 = 9600,
+            BAUD_19200 = 19200,
+            BAUD_38400 = 38400,
+            BAUD_57600 = 57600,
+            BAUD_115200 = 115200
+        };
+
 
 
         // basic functions
@@ -36,12 +44,15 @@ class SerialPort {
 
         SerialPort::Error close();
 
+        SerialPort::Error configure();
 
 
 
     private:
         
         int _fd = -1;
+
+        SerialPort::Error _set_baudrate(uint32_t baud);
 
 };
 
