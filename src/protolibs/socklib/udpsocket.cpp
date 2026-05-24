@@ -40,8 +40,7 @@ UDPSocket::Error UDPSocket::bind(const sockinfo_t& sockinfo) {
 
     ret = ::inet_pton(AF_INET, _sock_info.ip, &_sock_addr.sin_addr);
     if (ret != 1) {
-        // if we dont close it socket can get leaked
-        _close();
+        _close(); // dont leak the socket
 
         if (ret == 0) {
             return Error::INVALID_ADDR;
@@ -50,6 +49,7 @@ UDPSocket::Error UDPSocket::bind(const sockinfo_t& sockinfo) {
     }
 
     if (::bind(_sock_fd, (struct sockaddr*)&_sock_addr, sizeof(_sock_addr)) != 0) {
+        _close(); // dont leak the socket
         return Error::BIND;
     }
 
@@ -112,7 +112,6 @@ UDPSocket::Error UDPSocket::set_recv_timeout(std::size_t timeout_ms) {
         sizeof(recv_to)
     );
 #endif // _WIN32
-
     if (ret != 0) {
         return Error::SETSOCKOPT;
     }
@@ -120,14 +119,17 @@ UDPSocket::Error UDPSocket::set_recv_timeout(std::size_t timeout_ms) {
     return Error::NONE;
 }
 
-UDPSocket::Error UDPSocket::sendto(const sockinfo_t& dst, const uint8_t* buf, std::size_t buf_len) {
+UDPSocket::Error UDPSocket::sendto(const sockinfo_t& dst, 
+                                   const uint8_t* buf, 
+                                   std::size_t buf_len) {
     assert(buf != nullptr);
 
     if (!_bound) {
         return Error::NOTBOUND;
     }
 
-    // temporarily initialize sockaddr structure to send the data
+    // TODO: caching might speed this up in the future.
+    // using a lookup table with the sockinfo
     struct sockaddr_in dst_sa {};
     dst_sa.sin_family = AF_INET;
     dst_sa.sin_port = htons(dst.port);
@@ -164,6 +166,7 @@ UDPSocket::Error UDPSocket::recvfrom(uint8_t* buf,
         return Error::NOTBOUND;
     }
 
+    // TODO: might be possible to make this faster in the future by storing these
     sockaddr_in src_sa {};
     socklen_t src_sa_len = sizeof(src_sa);
 
