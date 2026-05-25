@@ -32,19 +32,6 @@ class SerialPort {
             WRITE,
         };
 
-        enum Baud {
-            BAUD_9600,
-            BAUD_19200,
-            BAUD_38400,
-            BAUD_57600,
-            BAUD_115200,
-            BAUD_230400,
-            BAUD_460800,
-            BAUD_921600
-        };
-
-
-
         // basic functions
         SerialPort();
         ~SerialPort();
@@ -54,6 +41,8 @@ class SerialPort {
         SerialPort::Error close();
 
         SerialPort::Error configure();
+
+        SerialPort::Error set_baudrate(unsigned int baudrate);
 
         SerialPort::Error write(const uint8_t* buf, 
                                 std::size_t buflen, 
@@ -72,9 +61,8 @@ class SerialPort {
 #else
         int _handle = -1;
 #endif // _WIN32
-
-        SerialPort::Error _set_baudrate(uint32_t baud);
-
+        
+        unsigned int _baudrate = 9600;
 };
 
 

@@ -40,6 +40,11 @@ SerialPort::Error SerialPort::close() {
     return Error::NONE;
 }
 
+SerialPort::Error SerialPort::set_baudrate(unsigned int baudrate) {
+    _baudrate = baudrate;
+    return Error::NONE;
+}
+
 SerialPort::Error SerialPort::configure() {
     if (_handle < 0) {
         return Error::NOT_OPEN;
@@ -56,6 +61,70 @@ SerialPort::Error SerialPort::configure() {
         // TODO: add more specific error handling
         return Error::CONFIG;
     }
+
+    // configure control flags
+    options.c_cflag |= (CLOCAL | CREAD); // enable receiver, ignore modem control lines
+    options.c_cflag &= ~CSIZE; // clear current char size mask
+    options.c_cflag |= CS8; // set 8 data bits
+    options.c_cflag &= ~PARENB; // disable parity
+    options.c_cflag &= ~CSTOPB; // set 1 stop bit
+    options.c_cflag &= ~CRTSCTS; // disable hardware flow control
+    
+    // configure local mode flags
+    options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // raw input mode
+
+    // confgure input flags
+    constexpr tcflag_t flow_ctrl_flags = ~(IXON | IXOFF | IXANY);
+
+    options.c_iflag &= flow_ctrl_flags; // disable software flow control
+
+    constexpr tcflag_t input_processing_flags = ~(IGNBRK | BRKINT | PARMRK | \
+                                                  ISTRIP | INLCR | IGNCR |  \
+                                                  ICRNL);
+    
+    options.c_iflag &= input_processing_flags; // disable input processing
+
+    // configure output flags
+    options.c_oflag &= ~OPOST; 
+    options.c_oflag &= ~ONLCR; // disable output processing
+
+    // set baudrate
+    speed_t baudrate;
+    switch (_baudrate) {
+        case 9600:
+            baudrate = B9600;
+            break;
+        case 19200:
+            baudrate = B19200;
+            break;
+        case 38400:
+            baudrate = B38400;
+            break;
+        case 57600:
+            baudrate = B57600;
+            break;
+        case 115200:
+            baudrate = B115200;
+            break;
+        default:
+            return Error::CONFIG; // unsupported baudrate
+    }
+
+    ret = cfsetispeed(&options, baudrate);
+    if (ret != 0) {
+        return Error::CONFIG;
+    }
+
+    ret = cfsetospeed(&options, baudrate);
+    if (ret != 0) {
+        return Error::CONFIG;
+    }
+
+    // save changes to termios struct
+    ret = tcsetattr(_handle, TCSANOW, &options);
+    if (ret != 0) {
+        return Error::CONFIG;
+    }  
 #endif // _WIN32
 
     return Error::NONE;

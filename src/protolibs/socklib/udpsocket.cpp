@@ -100,6 +100,7 @@ UDPSocket::Error UDPSocket::set_recv_timeout(std::size_t timeout_ms) {
 #else
     // Linux / POSIX based systems require a timeval structure
     // instead of just providing the number itself
+    
     struct timeval recv_to;
     recv_to.tv_sec = timeout_ms / 1000;
     recv_to.tv_usec = (timeout_ms % 1000) * 1000;
